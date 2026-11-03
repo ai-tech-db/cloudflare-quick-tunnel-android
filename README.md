@@ -14,9 +14,9 @@ The official `cloudflared` client (written in Go) does not work on Android witho
 ## The Solution
 
 This project bypasses the Go binary entirely and uses a pure-Rust QUIC client (`cloudflare-quick-tunnel-rs`). It includes:
-1. **DoH Resolver:** Custom `hickory-resolver` to fetch DNS records over port 443.
-2. **JNI Bindings:** C wrapper and Rust FFI to call the QUIC client from Kotlin/Flutter.
-3. **Webpki-roots:** Bundled Mozilla root CAs, since Android does not ship `/etc/ssl/certs/ca-certificates.crt`.
+1. DoH Resolver: Custom `hickory-resolver` to fetch DNS records over port 443.
+2. JNI Bindings: C wrapper and Rust FFI to call the QUIC client from Kotlin/Flutter.
+3. Webpki-roots: Bundled Mozilla root CAs, since Android does not ship `/etc/ssl/certs/ca-certificates.crt`.
 
 ## Structure
 
@@ -33,6 +33,17 @@ This code is used in [GhostChat](https://github.com/ai-tech-db/ghostchat), an E2
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0-or-later). See the LICENSE file for details.
 
 The Rust library is a fork of `cloudflare-quick-tunnel-rs` (MIT OR Apache-2.0). See the NOTICE file for attribution.
+
+## Support & Contributing
+
+This project is maintained by AI-Tech-DB. If you find it useful, here are some ways to contribute:
+
+- Star the repository: It helps other developers discover the project.
+- Report bugs: Open an issue with a clear description and logs.
+- Submit pull requests: Improvements to the DoH resolver, JNI bindings, or documentation are welcome.
+- Spread the word: Share the repository with Android developers who might need it.
+
+If you'd like to support the development financially, you can [sponsor me on GitHub](https://github.com/sponsors/ai-tech-db).
 
 ---
 
