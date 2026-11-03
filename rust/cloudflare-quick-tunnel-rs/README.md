@@ -1,118 +1,78 @@
-# cloudflare-quick-tunnel
+# cloudflare-quick-tunnel-rs
 
-[![crates.io](https://img.shields.io/crates/v/cloudflare-quick-tunnel.svg)](https://crates.io/crates/cloudflare-quick-tunnel)
-[![docs.rs](https://img.shields.io/docsrs/cloudflare-quick-tunnel)](https://docs.rs/cloudflare-quick-tunnel)
-[![CI](https://github.com/lordmacu/cloudflare-quick-tunnel-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/lordmacu/cloudflare-quick-tunnel-rs/actions/workflows/ci.yml)
-[![license](https://img.shields.io/crates/l/cloudflare-quick-tunnel.svg)](https://github.com/lordmacu/cloudflare-quick-tunnel-rs#license)
-[![MSRV](https://img.shields.io/badge/MSRV-1.86-blue)](https://blog.rust-lang.org/2025/04/03/Rust-1.86.0)
+A pure-Rust implementation of a Cloudflare Quick Tunnel client, designed specifically to work on Android without root.
 
-> Pure-Rust client for **Cloudflare quick tunnels**
-> (`https://*.trycloudflare.com`). Speaks QUIC + Cap'n Proto-RPC
-> against the `argotunnel` edge directly — no `cloudflared`
-> subprocess, no ~30 MB Go binary in your release tarball.
+This library is a fork of shadow3aaa/cloudflare-quick-tunnel-rs, modified to bypass the limitations of the official Go client on Android.
 
-Add to your project:
+## The Problem
 
-```toml
-[dependencies]
-cloudflare-quick-tunnel = "0.3"
-```
+The official cloudflared client (written in Go) does not work on Android without root. It attempts to resolve DNS SRV records via [::1]:53, but no service listens on that port on non-rooted devices. See cloudflare/cloudflared#1229.
 
-> Built as part of **[Nexo](https://github.com/lordmacu/nexo-rs)** — a
-> Rust multi-agent framework for building autonomous WhatsApp / Telegram /
-> Email agents with a NATS event bus, pluggable LLMs (MiniMax, Claude,
-> OpenAI, DeepSeek), per-agent memory, MCP support, and a SaaS-grade
-> microapp framework. Nexo embeds this crate to expose its admin /
-> webhook / pairing endpoints over a public HTTPS URL with zero ops
-> overhead — and the result is a self-contained single binary that
-> runs the same way on a VPS, in Docker, in Termux, and (next) as a
-> Flutter Android FFI library. If that sounds useful, see the parent
-> project.
+This library solves the problem by replacing the Go binary with a pure-Rust QUIC client.
 
-## Status
+## The Solution
 
-✅ **End-to-end working.** The full chain — POST `/tunnel` →
-edge discovery → QUIC dial → capnp-RPC `RegisterConnection` →
-inbound stream acceptor → HTTP/1.1 proxy → graceful unregister
-— is green under live tests. Reactor reconnect with exponential
-backoff handles edge-side drops. `streams_total` / `bytes_in` /
-`bytes_out` / `reconnects` are surfaced via `handle.metrics()`.
+To make Quick Tunnels work on non-rooted Android, this library implements three specific fixes:
 
-Try it locally:
+1. DoH Resolver (DNS over HTTPS): Uses hickory-resolver to fetch DNS records over port 443, bypassing the carrier/OEM DNS filtering and the [::1]:53 requirement.
+2. JNI Bindings: Includes C wrappers and Rust FFI bindings (in src/ffi.rs) to allow calling the QUIC client directly from Kotlin or Flutter.
+3. Webpki-roots: Bundles Mozilla's root CA certificates directly into the binary (cf-edge-roots.pem), because Android does not ship with /etc/ssl/certs/ca-certificates.crt (which the Rust TLS stack expects by default).
 
-```bash
-# In one terminal: start any local HTTP server on 8080.
-python3 -m http.server 8080 &
+## Building for Android
 
-# In another: bring up the tunnel.
-cargo run --example serve -- 8080
-# →  Public URL: https://<sub>.trycloudflare.com
-# →  Edge POP:   bog01
-```
+This library is designed to be compiled as a shared object (.so) for Android.
 
-The throwaway crate under `spike/` was used for the design
-spike — see [`docs/spike-verdict.md`](docs/spike-verdict.md) for
-the three undocumented edge gotchas it surfaced (ALPN, SNI, CF
-internal CAs).
+### Prerequisites
 
-## Why this crate exists
+- Rust toolchain (rustup).
+- Android NDK (set ANDROID_NDK_HOME).
+- cargo-ndk.
 
-The legacy path for exposing a local HTTP service over
-`https://*.trycloudflare.com` is to spawn `cloudflared` as a
-subprocess and scrape its stderr. That works on every platform
-`cloudflared` ships binaries for, but it:
+### Compilation
 
-- inflates packaged binaries by ~30 MB,
-- adds an auto-download step on first run (supply-chain surface),
-- blocks pure-Rust targets — Flutter/Android FFI, WASM, anywhere
-  without a Go runtime,
-- depends on Cloudflare's GitHub release URL layout staying stable.
+    # Add the Android target
+    rustup target add aarch64-linux-android
 
-`cloudflare-quick-tunnel` speaks the same protocol natively. The host
-application stays a single self-contained Rust binary.
+    # Install cargo-ndk
+    cargo install cargo-ndk
 
-## Scope
+    # Build the library
+    export ANDROID_NDK_HOME="/path/to/your/ndk"
+    cargo ndk build --release --target aarch64-linux-android
 
-- ✅ Quick tunnels (`https://*.trycloudflare.com`) — anonymous,
-  rate-limited, perfect for dev + webhook receivers.
-- ✅ HTTP/1.1 + HTTP/2 inbound proxy to a local TCP listener.
-- ❌ Named tunnels (require CF account + API token).
-- ❌ Argo Smart Routing.
-- ❌ UDP/ICMP proxy (`datagram v2` / `v3`). Only `cloudflared access`
-  and WARP use those.
-- ❌ WARP integration.
+The resulting .so will be in target/aarch64-linux-android/release/.
 
-## Quick start
+## Project Structure
 
-```rust
-use cloudflare_quick_tunnel::QuickTunnelManager;
+- src/api.rs: The main API for starting and stopping the tunnel.
+- src/dns_adapter.rs: The custom DoH resolver.
+- src/ffi.rs: The FFI layer exposed to the JNI wrapper.
+- src/quic_dial.rs: The QUIC connection logic.
+- cf-edge-roots.pem: Bundled Cloudflare edge certificates.
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let handle = QuickTunnelManager::new(8080).start().await?;
-    println!("Public URL: {}", handle.url);   // https://<sub>.trycloudflare.com
-    println!("Edge POP:   {}", handle.location); // e.g. bog01, atl01
-    // keep handle alive while serving on 127.0.0.1:8080 …
-    handle.shutdown().await?;
-    Ok(())
-}
-```
+## Usage Example (Rust)
 
-The `examples/serve.rs` binary is the same code with a SIGINT
-shutdown loop + a periodic heartbeat.
+    use dl_cloudflare_quick_tunnel::QuickTunnel;
 
-## Build prerequisites
+    // Start a tunnel on port 8080
+    let mut tunnel = QuickTunnel::start(8080)?;
+    let url = tunnel.url();
+    println!("Tunnel available at: {}", url);
 
-None — Cap'n Proto bindings are pre-generated under
-`src/proto_gen/` and shipped with the crate, so `cargo build`
-needs only the Rust toolchain. (Maintainers regenerating from
-a bumped schema run `scripts/regen-schemas.sh`, which is the
-only path that needs `capnp` installed.)
+    // ... use the tunnel ...
+
+    // Stop the tunnel
+    tunnel.stop();
 
 ## License
 
-MIT OR Apache-2.0 (standard Rust crate dual-license). See
-[`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md) for the small
-amount of Apache-2.0 material vendored from upstream `cloudflared`:
-the Cap'n Proto schemas the edge expects and the three
-Cloudflare-internal CA certificates that sign the edge's TLS cert.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0-or-later). See the LICENSE file for details.
+
+### Third-party components
+
+- This library is a fork of shadow3aaa/cloudflare-quick-tunnel-rs, originally licensed under MIT OR Apache-2.0.
+- See the NOTICE file for full attribution details.
+
+## Reference Implementation
+
+This code is used in GhostChat (https://github.com/ai-tech-db/ghostchat), an E2EE ephemeral chat app.
