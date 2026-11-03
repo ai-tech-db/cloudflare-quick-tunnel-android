@@ -4,6 +4,7 @@
 [![Rust](https://img.shields.io/badge/Rust-1.86-000000?logo=rust)](https://www.rust-lang.org)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com)
 [![No Root](https://img.shields.io/badge/Requires_Root-No-red.svg)]()
+[![Sponsor](https://img.shields.io/badge/Sponsor-ai--tech--db-pink?logo=github-sponsors)](https://github.com/sponsors/ai-tech-db)
 
 This repository contains a pure-Rust QUIC client for Cloudflare Quick Tunnels, with JNI bindings and a custom DoH (DNS over HTTPS) resolver, designed to work on non-rooted Android devices.
 
@@ -43,7 +44,7 @@ This project is maintained by AI-Tech-DB. If you find it useful, here are some w
 - Submit pull requests: Improvements to the DoH resolver, JNI bindings, or documentation are welcome.
 - Spread the word: Share the repository with Android developers who might need it.
 
-If you'd like to support the development financially, you can [sponsor me on GitHub](https://github.com/sponsors/ai-tech-db).
+If you find this project useful, consider sponsoring its development on GitHub.
 
 ---
 
