@@ -1,5 +1,10 @@
 # Cloudflare Quick Tunnel for Android (No Root)
 
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Rust](https://img.shields.io/badge/Rust-1.86-000000?logo=rust)](https://www.rust-lang.org)
+[![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com)
+[![No Root](https://img.shields.io/badge/Requires_Root-No-red.svg)]()
+
 This repository contains a pure-Rust QUIC client for Cloudflare Quick Tunnels, with JNI bindings and a custom DoH (DNS over HTTPS) resolver, designed to work on non-rooted Android devices.
 
 ## The Problem
