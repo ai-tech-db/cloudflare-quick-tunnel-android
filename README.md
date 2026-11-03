@@ -33,3 +33,7 @@ This code is used in [GhostChat](https://github.com/ai-tech-db/ghostchat), an E2
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0-or-later). See the LICENSE file for details.
 
 The Rust library is a fork of `cloudflare-quick-tunnel-rs` (MIT OR Apache-2.0). See the NOTICE file for attribution.
+
+---
+
+Made with ❤️ by AI-Tech-DB
