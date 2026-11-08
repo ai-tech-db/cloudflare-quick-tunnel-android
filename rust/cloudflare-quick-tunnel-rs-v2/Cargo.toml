@@ -2,7 +2,7 @@
 
 [package]
 name = "dl-cloudflare-quick-tunnel-v2"
-version     = "0.3.1"
+version     = "0.4.0"
 edition     = "2021"
 license     = "MIT OR Apache-2.0"
 description = "Pure-Rust client for Cloudflare quick tunnels (https://*.trycloudflare.com) — no cloudflared subprocess. Speaks QUIC + capnp-RPC to the argotunnel edge directly. HTTP/1.1 + WebSocket Upgrade, HA pool, TCP keep-alive."
