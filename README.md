@@ -21,7 +21,13 @@ This project bypasses the Go binary entirely and uses a pure-Rust QUIC client (`
 
 ## Structure
 
-- `rust/cloudflare-quick-tunnel-rs/`: The forked Rust QUIC client.
+The repository contains two versions of the Rust library:
+
+- `rust/cloudflare-quick-tunnel-rs/`: **v0.3.1** — Original version (uses `webpki-roots` + Cloudflare CAs). Kept for reference and backward compatibility.
+- `rust/cloudflare-quick-tunnel-rs-v2/`: **v0.4.0** — Updated version (uses `rustls-platform-verifier` 0.7 + `jni` 0.22, includes the JNI init function for Android 14+). This is the version used by GhostChat v2.
+
+Other files:
+
 - `android/app/src/main/cpp/qttunnel_jni.c`: The JNI wrapper.
 - `android/app/src/main/kotlin/com/aitechdb/ghostchat/MainActivity.kt`: Example Kotlin code that loads the native library.
 
