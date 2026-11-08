@@ -24,12 +24,27 @@ This project bypasses the Go binary entirely and uses a pure-Rust QUIC client (`
 The repository contains two versions of the Rust library:
 
 - `rust/cloudflare-quick-tunnel-rs/`: **v0.3.1** — Original version (uses `webpki-roots` + Cloudflare CAs). Kept for reference and backward compatibility.
-- `rust/cloudflare-quick-tunnel-rs-v2/`: **v0.4.0** — Updated version (uses `rustls-platform-verifier` 0.7 + `jni` 0.22, includes the JNI init function for Android 14+). This is the version used by GhostChat v2.
+- `rust/cloudflare-quick-tunnel-rs-v2/`: **v0.4.0** — Updated version (uses `rustls-platform-verifier` 0.7 + `jni` 0.22, includes the JNI init function for Android 14+).
 
 Other files:
 
 - `android/app/src/main/cpp/qttunnel_jni.c`: The JNI wrapper.
 - `android/app/src/main/kotlin/com/aitechdb/ghostchat/MainActivity.kt`: Example Kotlin code that loads the native library.
+
+## What's new in v0.4.0
+
+The `v2` crate replaces bundled Mozilla CA certificates (`webpki-roots`) with `rustls-platform-verifier`.
+
+**Benefits:**
+
+- Uses the platform's native certificate verification infrastructure.
+- No need to manually update bundled Firefox/Mozilla root CA certificates.
+- Certificate trust updates follow the Android operating system's CA store updates.
+- Simplifies long-term certificate maintenance.
+
+**Scope of the change:** this removes the need to manually maintain a bundled Mozilla CA bundle in the Rust code. It does not mean no certificate maintenance will ever be required — trust decisions are delegated to the platform's verifier within its own support and configuration limits.
+
+The original v0.3.1 crate remains available for backward compatibility and reference.
 
 ## Reference Implementation
 
