@@ -48,7 +48,7 @@ The original v0.3.1 crate remains available for backward compatibility and refer
 
 ## Reference Implementation
 
-This code is used in [GhostChat](https://github.com/ai-tech-db/GhostChat-v2.0.0), an E2EE ephemeral chat app.
+This code is used in [GhostChat-v2.0.0](https://github.com/ai-tech-db/GhostChat-v2.0.0), an E2EE ephemeral chat app.
 
 ## License
 
